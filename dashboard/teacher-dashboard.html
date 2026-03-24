@@ -273,7 +273,8 @@
 
 <script>
 const API_BASE   = "http://localhost:3000";
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCMTJ1o5EegGhzeKsTKukHxT5nv2EwLeaA";
+// IMPORTANT: Gemini API key removed for security. Set GEMINI_API_KEY in your environment and inject at build time.
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=YOUR_GEMINI_API_KEY_HERE";
 
 // ── Auth guard ──
 const teacherToken = localStorage.getItem('teacherToken');
