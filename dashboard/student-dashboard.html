@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEnius – Student</title>
+  <link rel="shortcut icon" href="../signUpPage/geu_medium.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .side-nav {
+      overflow-y: auto !important;
+      overflow-x: hidden;
+    }
+    .side-nav::-webkit-scrollbar { width: 4px; }
+    .side-nav::-webkit-scrollbar-track { background: transparent; }
+    .side-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 2px; }
+    .quick-commands {
+      flex-shrink: 0;
+      margin-top: 0 !important;
+    }
+    .role-banner {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0,0,0,0.25); border-radius: 8px;
+      padding: 8px 12px; margin-bottom: 14px; font-size: 13px;
+    }
+    .role-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #4fc3f7; box-shadow: 0 0 6px #4fc3f7; flex-shrink: 0;
+    }
+    /* Feature panel — full overlay inside chat_container */
+    .feature-panel {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: #151526; z-index: 20;
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    .feature-panel.open { display: flex; }
+    .panel-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #652c90, #c02942); flex-shrink: 0;
+    }
+    .panel-header h2 { font-size: 16px; color: #fff; margin: 0; }
+    .btn-back {
+      background: rgba(255,255,255,0.15); border: none; color: #fff;
+      padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px;
+      transition: background 0.2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.28); }
+    .panel-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .panel-body::-webkit-scrollbar { width: 5px; }
+    .panel-body::-webkit-scrollbar-track { background: #111; }
+    .panel-body::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    .search-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .search-row input {
+      flex: 1; min-width: 140px; padding: 10px 14px; border-radius: 20px;
+      border: 1px solid #333; background: #2d2d2d; color: #fff; font-size: 14px; outline: none;
+    }
+    .search-row input:focus { border-color: #652c90; }
+    .btn-search {
+      padding: 10px 20px; border-radius: 20px; border: none;
+      background: linear-gradient(135deg, #652c90, #c02942); color: #fff;
+      cursor: pointer; font-size: 14px; transition: opacity 0.2s;
+    }
+    .btn-search:hover { opacity: 0.88; }
+    .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .note-card {
+      background: #2a2a3e; border-radius: 12px; padding: 16px; border-left: 3px solid #4fc3f7;
+    }
+    .note-card h3 { font-size: 15px; color: #fff; margin-bottom: 6px; }
+    .note-card p  { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+    .note-card a  {
+      display: inline-block; margin-top: 8px; padding: 6px 14px;
+      background: linear-gradient(135deg, #652c90, #c02942); color: #fff;
+      border-radius: 14px; text-decoration: none; font-size: 13px;
+    }
+    .note-card a:hover { opacity: 0.85; }
+    .notice-card {
+      background: #2a2a3e; border-radius: 12px; padding: 16px 18px;
+      margin-bottom: 12px; border-left: 3px solid #c02942;
+    }
+    .notice-card h3 { font-size: 15px; color: #fff; margin-bottom: 6px; }
+    .notice-card p  { font-size: 13px; color: #ccc; line-height: 1.5; }
+    .notice-card .meta { font-size: 11px; color: #888; margin-top: 8px; }
+    .status-msg {
+      padding: 10px 14px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 12px; display: none;
+    }
+    .status-msg.error   { background: rgba(192,41,66,0.25); color: #ff8a9b; display: block; }
+    .status-msg.success { background: rgba(100,220,100,0.15); color: #81c784; display: block; }
+    .empty-msg { color: #888; font-size: 14px; text-align: center; margin-top: 30px; }
+    .iframe-wrap { width: 100%; height: calc(100vh - 110px); border: none; border-radius: 0; }
+  </style>
+</head>
+<body>
+
+
+<div class="chat_container">
+
+  <!-- ===== SIDE NAV ===== -->
+  <div class="side-nav" id="side-nav">
+    <img src="../img/GEHU.jpg" alt="GEU" class="chatbot-image">
+    <h1 class="chatbot-title">GEnius – Student Portal</h1>
+    <p class="chatbot-info">Ask me anything, browse teacher notes, check notices, and find your class locations.</p>
+
+    <div class="role-banner">
+      <div class="role-dot"></div>
+      <span>Signed in as <strong id="nav-name">Student</strong></span>
+    </div>
+
+    <div class="quick-commands">
+      <h3>Quick Actions</h3>
+      <div class="command" id="cmd-browse-notes">
+        <span class="command-icon">📚</span>
+        <span class="command-text">Browse Teacher Notes</span>
+      </div>
+      <div class="command" id="cmd-notices">
+        <span class="command-icon">📢</span>
+        <span class="command-text">Notice Board</span>
+      </div>
+      <div class="command" data-command="Process the uploaded image and describe its content">
+        <span class="command-icon">🖼️</span>
+        <span class="command-text">Process image &amp; describe</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HAMBURGER MENU ===== -->
+  <div class="menu-button" id="menu-icon">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="menu-content" id="menu-content">
+    <a href="../index.html">🏠 Universal Chatbot</a>
+    <a href="#" id="menu-logout" style="color:#ff6b6b;">🚪 Logout</a>
+  </div>
+
+  <!-- ===== MAIN CHAT AREA ===== -->
+  <div class="ai-chat-box" id="ai-chat-box">
+    <div class="ai-response" id="ai-response"></div>
+  </div>
+
+  <!-- ===== FEATURE PANELS (overlay inside chat_container) ===== -->
+
+  <!-- Browse Notes -->
+  <div class="feature-panel" id="panel-notes">
+    <div class="panel-header">
+      <button class="btn-back" onclick="closePanel('panel-notes')">← Back to Chat</button>
+      <h2>📚 Browse Teacher Notes</h2>
+    </div>
+    <div class="panel-body">
+      <div class="search-row">
+        <input type="text" id="notes-teacher" placeholder="Teacher name (e.g. Rahul)">
+        <input type="text" id="notes-keyword" placeholder="Keyword (e.g. AI, DBMS)">
+        <button class="btn-search" id="notes-search-btn">🔍 Search</button>
+      </div>
+      <div class="status-msg" id="notes-status"></div>
+      <div class="notes-grid" id="notes-grid">
+        <p class="empty-msg">Enter a teacher name or keyword and press Search.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notice Board -->
+  <div class="feature-panel" id="panel-notices">
+    <div class="panel-header">
+      <button class="btn-back" onclick="closePanel('panel-notices')">← Back to Chat</button>
+      <h2>📢 Notice Board</h2>
+    </div>
+    <div class="panel-body">
+      <div id="notices-list"><p class="empty-msg">Loading notices...</p></div>
+    </div>
+  </div>
+
+
+</div><!-- end chat_container -->
+
+<!-- ===== PROMPT AREA ===== -->
+<div class="prompt-area">
+  <input id="prompt" type="text" placeholder="Ask me anything...">
+  <button id="image">
+    <img src="../img/img.svg" alt="Upload image" id="img-preview">
+    <input type="file" accept="image/*" hidden id="img-upload">
+  </button>
+  <button id="submit">
+    <img src="../img/upArrow.svg" alt="Send" width="24">
+  </button>
+</div>
+
+<script>
+const API_BASE   = "http://localhost:3000";
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCMTJ1o5EegGhzeKsTKukHxT5nv2EwLeaA";
+
+// ── Auth guard ──
+const studentToken = localStorage.getItem('studentToken');
+const studentName  = localStorage.getItem('studentName');
+if (!studentToken) { window.location.href = '../signUpPage/student-login.html'; }
+document.getElementById('nav-name').textContent = studentName || 'Student';
+
+// ── Menu toggle ──
+const menuIcon    = document.getElementById('menu-icon');
+const menuContent = document.getElementById('menu-content');
+menuIcon.addEventListener('click', () => menuContent.classList.toggle('active'));
+document.addEventListener('click', e => {
+  if (!menuIcon.contains(e.target) && !menuContent.contains(e.target))
+    menuContent.classList.remove('active');
+});
+
+// ── Logout ──
+document.getElementById('menu-logout').addEventListener('click', e => {
+  e.preventDefault();
+  ['studentToken','studentName','studentDept','userRole'].forEach(k => localStorage.removeItem(k));
+  window.location.href = '../index.html';
+});
+
+// ── Panel helpers ──
+function openPanel(id) {
+  document.querySelectorAll('.feature-panel').forEach(p => p.classList.remove('open'));
+  document.getElementById(id).classList.add('open');
+}
+function closePanel(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── Quick actions ──
+document.getElementById('cmd-browse-notes').addEventListener('click', () => openPanel('panel-notes'));
+document.getElementById('cmd-notices').addEventListener('click',      () => { openPanel('panel-notices'); fetchNotices(); });
+
+// ── Generic data-command buttons ──
+document.querySelectorAll('.command[data-command]').forEach(cmd => {
+  cmd.addEventListener('click', () => {
+    document.getElementById('prompt').value = cmd.dataset.command;
+    document.getElementById('prompt').focus();
+  });
+});
+
+// ── Chat helpers ──
+const aiResponse = document.getElementById('ai-response');
+const chatBox    = document.getElementById('ai-chat-box');
+
+function addUserBubble(text, imgSrc) {
+  const wrap = document.createElement('div');
+  wrap.className = 'user-chat-box';
+  wrap.innerHTML = `<div class="user-chat-area"><p>${escapeHTML(text)}</p>${imgSrc ? `<img class="chooseimg" src="${imgSrc}">` : ''}</div>`;
+  aiResponse.appendChild(wrap);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function addAiBubble(html) {
+  const wrap = document.createElement('div');
+  wrap.className = 'teacher-chat-box';
+  wrap.innerHTML = `<img src="../img/GEHU.jpg" alt="AI" id="AiImage"><div class="teacher-chat-area">${html}</div>`;
+  aiResponse.appendChild(wrap);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  return wrap.querySelector('.teacher-chat-area');
+}
+
+// ── Image upload ──
+let chosenImg = null, chosenB64 = null;
+const imgPreview = document.getElementById('img-preview');
+document.getElementById('image').addEventListener('click', () => document.getElementById('img-upload').click());
+document.getElementById('img-upload').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    chosenB64 = ev.target.result.split(',')[1];
+    chosenImg = ev.target.result;
+    imgPreview.src = ev.target.result;
+    imgPreview.className = 'choose';
+  };
+  reader.readAsDataURL(file);
+});
+
+// ── Send message ──
+async function generateResponse() {
+  const promptEl = document.getElementById('prompt');
+  const userMsg  = promptEl.value.trim();
+  if (!userMsg) return;
+  promptEl.value = '';
+  addUserBubble(userMsg, chosenImg);
+  const imgToSend = chosenImg, b64 = chosenB64;
+  chosenImg = chosenB64 = null;
+  imgPreview.src = '../img/img.svg'; imgPreview.className = '';
+
+  // Fetch notes command
+  const fetchMatch = userMsg.match(/fetch\s+([a-zA-Z\s]+?)(?:\s+(?:sir|mam|ma'am))?\s+notes?(?:\s+with\s+keyword\s+(.+))?/i);
+  if (fetchMatch) {
+    const tName = fetchMatch[1].trim(), keyword = fetchMatch[2] ? fetchMatch[2].trim() : '';
+    const bubble = addAiBubble('🔍 Searching for notes...');
+    try {
+      let url = `${API_BASE}/fetch-notes?teacher_name=${encodeURIComponent(tName)}`;
+      if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+      const res = await fetch(url); const data = await res.json();
+      if (data.length) {
+        const links = data.map(n => `<a href="${n.file_url}" target="_blank" style="color:#4fc3f7;">${escapeHTML(n.keyword||'Note')}</a>`).join('<br>');
+        bubble.innerHTML = `✅ Found <strong>${data.length}</strong> note(s) from <strong>${escapeHTML(tName)}</strong>:<br><div style="margin-top:8px;">${links}</div>`;
+      } else {
+        bubble.innerHTML = `❌ No notes found for <strong>${escapeHTML(tName)}</strong>${keyword?` with keyword "<em>${escapeHTML(keyword)}</em>"`:''}`;
+      }
+    } catch(err) { bubble.innerHTML = `⚠️ Error fetching notes: ${err.message}`; }
+    return;
+  }
+
+  // Gemini AI
+  const bubble = addAiBubble('⏳ Thinking...');
+  try {
+    const parts = [{ text: userMsg }];
+    if (b64) parts.push({ inline_data: { mime_type: 'image/jpeg', data: b64 } });
+    const res  = await fetch(GEMINI_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{ parts }] }) });
+    const data = await res.json();
+    const raw  = data.candidates[0].content.parts[0].text;
+    bubble.innerHTML = raw.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+  } catch(err) { bubble.innerHTML = `⚠️ AI is unavailable right now.`; }
+}
+
+document.getElementById('submit').addEventListener('click', generateResponse);
+document.getElementById('prompt').addEventListener('keydown', e => { if (e.key==='Enter') generateResponse(); });
+
+// ── Notes Search ──
+document.getElementById('notes-search-btn').addEventListener('click', async () => {
+  const teacher = document.getElementById('notes-teacher').value.trim();
+  const keyword = document.getElementById('notes-keyword').value.trim();
+  const grid = document.getElementById('notes-grid');
+  const status = document.getElementById('notes-status');
+  if (!teacher && !keyword) { showStatus(status,'Please enter a teacher name or keyword.','error'); return; }
+  status.style.display = 'none';
+  grid.innerHTML = '<p class="empty-msg">Searching...</p>';
+  try {
+    let url = `${API_BASE}/fetch-notes?teacher_name=${encodeURIComponent(teacher||' ')}`;
+    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+    const res = await fetch(url); const data = await res.json();
+    if (!data.length) { grid.innerHTML='<p class="empty-msg">No notes found.</p>'; return; }
+    grid.innerHTML = '';
+    data.forEach(note => {
+      const card = document.createElement('div'); card.className = 'note-card';
+      card.innerHTML = `<h3>📄 ${escapeHTML(note.keyword||'Untitled')}</h3><p>By: ${escapeHTML(note.teacher_name)}</p><p>${new Date(note.created_at).toLocaleDateString()}</p><a href="${note.file_url}" target="_blank">📥 View / Download</a>`;
+      grid.appendChild(card);
+    });
+  } catch(err) { grid.innerHTML=`<p class="empty-msg">Error: ${err.message}</p>`; }
+});
+
+// ── Notices ──
+async function fetchNotices() {
+  const list = document.getElementById('notices-list');
+  list.innerHTML = '<p class="empty-msg">Loading...</p>';
+  try {
+    const res = await fetch(`${API_BASE}/api/notices`); const data = await res.json();
+    if (!data.length) { list.innerHTML='<p class="empty-msg">No notices yet.</p>'; return; }
+    list.innerHTML = '';
+    data.forEach(n => {
+      const card = document.createElement('div'); card.className = 'notice-card';
+      card.innerHTML = `<h3>${escapeHTML(n.title)}</h3><p>${escapeHTML(n.content)}</p><div class="meta">📌 ${escapeHTML(n.teacher_name)} &nbsp;|&nbsp; ${new Date(n.created_at).toLocaleString()}</div>`;
+      list.appendChild(card);
+    });
+  } catch(err) { list.innerHTML='<p class="empty-msg">Failed to load notices.</p>'; }
+}
+
+function showStatus(el, msg, type) {
+  el.textContent=msg; el.className=`status-msg ${type}`; el.style.display='block';
+  setTimeout(()=>{ el.style.display='none'; }, 4000);
+}
+function escapeHTML(str) {
+  if (!str) return '';
+  return str.replace(/[&<>'"]/g, t=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
+}
+
+// ── Welcome message ──
+addAiBubble(`👋 Hi <strong>${escapeHTML(studentName||'Student')}</strong>! I'm GEnius, your AI study assistant.<br>Use the quick actions on the left, or just ask me anything!<br><br><em style="opacity:0.7;">Tip: "Fetch Rahul sir notes with keyword AI"</em>`);
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="../signUpPage/geu_medium.png" type="image/x-icon">
+    <link rel="stylesheet" href="teacherform.css">
+    <title>Teacher Notes Upload</title>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="../img/GEHU.jpg" alt="Graphic Era University" class="logo">
+            <h1>Teacher Notes Upload Portal</h1>
+            <div id="teacher-info">
+                <p>Welcome, <span id="teacher-name">Teacher</span></p>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="auth-message" id="auth-message">
+                <p>Please <a href="../signUpPage/teacher-login.html">login</a> to upload notes.</p>
+            </div>
+
+            <div class="upload-form" id="upload-form" style="display: none;">
+                <h2>Upload Study Material</h2>
+                <form id="noteUploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="keyword">Keyword/Topic</label>
+                        <input type="text" id="keyword" name="keyword" placeholder="e.g., Data Structures, Machine Learning">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="note">Select PDF File</label>
+                        <div class="file-input-container">
+                            <input type="file" id="note" name="note" accept=".pdf" required>
+                            <div class="file-input-button">Choose File</div>
+                            <div class="file-input-name">No file chosen</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" id="upload-button">Upload Note</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="uploaded-notes" id="uploaded-notes" style="display: none;">
+                <h2>Your Uploaded Notes</h2>
+                <div class="notes-list" id="notes-list">
+                    <p class="loading">Loading your notes...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Graphic Era University - GEnius Chatbot</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

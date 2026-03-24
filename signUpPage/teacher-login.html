@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="geu_medium.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>GEnius - Teacher Login</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #652c90, #c02942);
+        }
+        .form-input {
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: #652c90;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
+            <div class="px-6 py-8">
+                <div class="flex justify-center mb-6">
+                    <img src="geu_medium.png" alt="GEU Logo" class="h-20">
+                </div>
+                <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-6">Teacher Login</h2>
+                <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 hidden"></div>
+                
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                            Email Address
+                        </label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                                class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                            >
+                            <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <div class="text-sm">
+                            <a href="#" class="font-medium text-purple-600 hover:text-purple-500">
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            id="submit-button"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                        >
+                            Log in
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        Don't have an account?
+                        <a href="teacher-signup.html" class="font-medium text-purple-600 hover:text-purple-500">
+                            Sign up
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('login-form');
+            const errorMessage = document.getElementById('error-message');
+            const submitButton = document.getElementById('submit-button');
+            const rememberMe = document.getElementById('remember-me');
+
+            // Check if we have stored credentials
+            if (localStorage.getItem('remember-teacher')) {
+                const storedEmail = localStorage.getItem('teacher-email');
+                if (storedEmail) {
+                    document.getElementById('email').value = storedEmail;
+                    rememberMe.checked = true;
+                }
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Reset error message
+                errorMessage.classList.add('hidden');
+                errorMessage.textContent = '';
+                
+                // Get form data
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                // Disable button and show loading state
+                submitButton.textContent = 'Logging in...';
+                submitButton.disabled = true;
+                
+                try {
+                    const response = await fetch('http://localhost:3000/api/teacher/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: email,
+                            password: password
+                        })
+                    });
+                    
+                    // Check if response is ok before trying to parse JSON
+                    if (!response.ok) {
+                        if (response.headers.get('content-type')?.includes('application/json')) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Invalid email or password');
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Server returned non-JSON response:', errorText);
+                            throw new Error('Server error: The server returned an invalid response');
+                        }
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Store the token in localStorage
+                    localStorage.setItem('teacherToken', data.token);
+                    localStorage.setItem('teacherName', data.teacher.full_name);
+                    
+                    // Remember me functionality
+                    if (rememberMe.checked) {
+                        localStorage.setItem('remember-teacher', 'true');
+                        localStorage.setItem('teacher-email', email);
+                    } else {
+                        localStorage.removeItem('remember-teacher');
+                        localStorage.removeItem('teacher-email');
+                    }
+                    
+                    // Redirect to teacher dashboard
+                    window.location.href = '../dashboard/teacher-dashboard.html';
+                } catch (err) {
+                    console.error('Login error:', err);
+                    errorMessage.textContent = err.message || 'Invalid email or password';
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    // Reset button state
+                    submitButton.textContent = 'Log in';
+                    submitButton.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

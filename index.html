@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEnius</title>
+  <link rel="shortcut icon" href="signUpPage/geu_medium.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="chat_container">
+      <!-- Side Navigation -->
+      <div class="side-nav" id="side-nav">
+          <img src="img/GEHU.jpg" alt="Chatbot Image" class="chatbot-image">
+          <h1 class="chatbot-title">Graphic Era Student Teacher Chatbot</h1>
+          <p class="chatbot-info">This chatbot establishes direct communication between teachers and students, providing you with access to your teacher's notes on specific <span style='color: #4fc3f7;'>terms</span> (if they have been uploaded).</p>
+          
+          <div class="quick-commands">
+              <h3>Quick Commands</h3>
+              <div class="command" data-command="Process the uploaded image and describe its content">
+                    <span class="command-icon">🖼️</span>
+                    <span class="command-text">Process image & describe content</span>
+                </div>
+                <div class="command" data-command="What courses are available at Graphic Era?">
+                  <span class="command-icon">🎓</span>
+                  <span class="command-text">Courses at Graphic Era</span>
+              </div>
+              <div class="command" data-command="fetch notes" id="cmd-fetch-notes">
+                  <span class="command-icon">🔍</span>
+                  <span class="command-text">Fetch Teacher Notes <span style="font-size:10px;opacity:0.7;">(login required)</span></span>
+              </div>
+          </div>
+          <div id="login-status-bar" style="margin-top:12px; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px; font-size:13px;"></div>
+      </div>
+    
+      <div class="menu-button" id="menu-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+      </div>
+
+      <div class="menu-content" id="menu-content">
+          <a href="signUpPage/index.html" id="menu-signin" target="_blank">🔑 Sign In / Sign Up</a>
+          <a href="dashboard/student-dashboard.html" id="menu-student-dash" target="_blank" style="display:none;">🎓 My Dashboard</a>
+          <a href="NoticBoard/Notic.html" id="Notice" target="_blank">📢 Notice Board</a>
+          <a href="location/location.html" id="Location" target="_blank">📍 Class Location</a>
+          <a href="aboutme/intex.html" id="AboutMe" target="_blank">ℹ️ About Chatbot</a>
+          <a href="#" id="menu-logout" style="display:none; color:#ff6b6b;">🚪 Logout</a>
+      </div>
+      
+      <div class="ai-chat-box">
+          <div class="ai-response"></div>
+      </div>
+  </div>
+  
+  <div class="prompt-area">
+      <input id="prompt" type="text" placeholder="Ask me anything...">
+      <button id="image">
+        <img src="img/img.svg" alt="Upload image">
+        <input type="file" accept="images/*" hidden>
+      </button>
+      <button id="submit">
+        <img src="img/upArrow.svg" alt="Send" width="24">
+      </button>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

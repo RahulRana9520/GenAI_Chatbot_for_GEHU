@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice Board</title>
+    <link rel="stylesheet" href="Notic.css">
+</head>
+<body>
+    <div class="notice-container">
+        <h1>Notice Board</h1>
+        <div id="login-section" class="auth-section">
+            <h2>Teacher Login</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <input type="checkbox" id="remember-me" style="margin-right: 6px;"> <label for="remember-me" style="font-size: 0.95rem;">Remember me</label>
+                </div>
+                <button type="submit" id="login-btn">Login</button>
+                <div id="login-error" class="error-message"></div>
+            </form>
+            <div class="mt-2" style="text-align:center; font-size:0.95rem;">
+                Don't have an account? <a href="../signUpPage/teacher-signup.html" style="color:#652c90; text-decoration:underline;">Sign up</a>
+            </div>
+        </div>
+        <div id="notice-section" style="display:none;">
+            <div class="notice-form-box">
+                <h2>Post a New Notice</h2>
+                <form id="notice-form">
+                    <input type="text" id="notice-title" placeholder="Notice Title" required>
+                    <textarea id="notice-content" placeholder="Notice Content" required></textarea>
+                    <button type="submit">Post Notice</button>
+                </form>
+            </div>
+            <div class="logout-box">
+                <span id="teacher-name"></span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </div>
+        <div class="notices-list-box">
+            <h2>All Notices</h2>
+            <ul id="notices-list"></ul>
+        </div>
+    </div>
+    <script src="Notic.js"></script>
+</body>
+</html>

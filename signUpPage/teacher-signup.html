@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="geu_medium.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>GEnius - Teacher Sign Up</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #652c90, #c02942);
+        }
+        .form-input {
+            transition: border-color 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: #652c90;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
+            <div class="px-6 py-8">
+                <div class="flex justify-center mb-6">
+                    <img src="geu_medium.png" alt="GEU Logo" class="h-20">
+                </div>
+                <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-6">Teacher Sign Up</h2>
+                <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 hidden"></div>
+                
+                <form id="signup-form" class="space-y-6">
+                    <div>
+                        <label for="fullName" class="block text-sm font-medium text-gray-700">
+                            Full Name
+                        </label>
+                        <input
+                            id="fullName"
+                            name="fullName"
+                            type="text"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                            Email Address
+                        </label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="department" class="block text-sm font-medium text-gray-700">
+                            Department
+                        </label>
+                        <select
+                            id="department"
+                            name="department"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                            <option value="">Select Department</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Civil">Civil</option>
+                            <option value="Management">Management</option>
+                            <option value="Humanities">Humanities</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="employeeId" class="block text-sm font-medium text-gray-700">
+                            Employee ID
+                        </label>
+                        <input
+                            id="employeeId"
+                            name="employeeId"
+                            type="text"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
+                            Confirm Password
+                        </label>
+                        <input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                        >
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            id="submit-button"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                        >
+                            Sign Up
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a href="teacher-login.html" class="font-medium text-purple-600 hover:text-purple-500">
+                            Log in
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('signup-form');
+            const errorMessage = document.getElementById('error-message');
+            const submitButton = document.getElementById('submit-button');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Reset error message
+                errorMessage.classList.add('hidden');
+                errorMessage.textContent = '';
+                
+                // Get form data
+                const fullName = document.getElementById('fullName').value;
+                const email = document.getElementById('email').value;
+                const department = document.getElementById('department').value;
+                const employeeId = document.getElementById('employeeId').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                // Basic validation
+                if (password !== confirmPassword) {
+                    errorMessage.textContent = 'Passwords do not match';
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    errorMessage.textContent = 'Password must be at least 6 characters';
+                    errorMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                // Disable button and show loading state
+                submitButton.textContent = 'Signing up...';
+                submitButton.disabled = true;
+                
+                try {
+                    const response = await fetch('http://localhost:3000/api/teacher/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            full_name: fullName,
+                            email: email,
+                            department: department,
+                            employee_id: employeeId,
+                            password: password
+                        })
+                    });
+                    
+                    // Check if response is ok before trying to parse JSON
+                    if (!response.ok) {
+                        if (response.headers.get('content-type')?.includes('application/json')) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to sign up');
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Server returned non-JSON response:', errorText);
+                            throw new Error('Server error: The server returned an invalid response');
+                        }
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Redirect to login page on success
+                    window.location.href = 'teacher-login.html';
+                } catch (err) {
+                    console.error('Signup error:', err);
+                    errorMessage.textContent = err.message || 'An error occurred during signup';
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    // Reset button state
+                    submitButton.textContent = 'Sign Up';
+                    submitButton.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

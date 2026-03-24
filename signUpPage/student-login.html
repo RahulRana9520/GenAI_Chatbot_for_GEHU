@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="geu_medium.png" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>GEnius - Student Login</title>
+    <style>
+        body { background: linear-gradient(to right, #1a6fa8, #0d9488); }
+        .form-input:focus { border-color: #1a6fa8; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center py-12 px-4">
+        <div class="max-w-md w-full bg-white rounded-lg shadow-xl overflow-hidden">
+            <div class="px-6 py-8">
+                <div class="flex justify-center mb-6">
+                    <img src="geu_medium.png" alt="GEU Logo" class="h-20">
+                </div>
+                <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-6">Student Login</h2>
+                <div id="error-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 hidden"></div>
+
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                        <input id="email" type="email" required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input id="password" type="password" required
+                            class="mt-1 form-input block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit" id="submit-btn"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Log in
+                    </button>
+                </form>
+
+                <p class="mt-4 text-center text-sm text-gray-600">
+                    Don't have an account?
+                    <a href="student-signup.html" class="font-medium text-blue-600 hover:text-blue-500">Sign up</a>
+                </p>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    <a href="index.html" class="text-gray-400 hover:text-gray-600">← Back to portal</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:3000";
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const err = document.getElementById('error-message');
+            const btn = document.getElementById('submit-btn');
+            err.classList.add('hidden');
+            btn.textContent = 'Logging in...';
+            btn.disabled = true;
+
+            const email    = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/student/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Login failed');
+
+                localStorage.setItem('studentToken', data.token);
+                localStorage.setItem('studentName', data.student.full_name);
+                localStorage.setItem('studentDept', data.student.department);
+                localStorage.setItem('userRole', 'student');
+                window.location.href = '../dashboard/student-dashboard.html';
+            } catch(ex) {
+                err.textContent = ex.message;
+                err.classList.remove('hidden');
+            } finally {
+                btn.textContent = 'Log in';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

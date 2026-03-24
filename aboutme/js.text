@@ -1,0 +1,194 @@
+// Select DOM elements
+const prompt = document.querySelector('#prompt'); // Input field for user message
+const submitbtn = document.querySelector('#submit'); // Submit button
+const chatContainer = document.querySelector('.chat_container'); // Chat container
+let imagebtn = document.querySelector("#image"); // Image upload button
+let image = document.querySelector("#image img"); // Image element to display uploaded image
+let imageinput = document.querySelector("#image input"); // Hidden file input for image upload
+
+// API URL for generative language model
+const Api_Url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCMTJ1o5EegGhzeKsTKukHxT5nv2EwLeaA";
+
+// User object to store message and file data
+const user = {
+    message: null, // User's message
+    file: {
+        mime_type: null, // MIME type of uploaded file
+        data: null // Base64 data of uploaded file
+    }
+};
+
+// Function to generate AI response or fetch notes
+async function generateResponse(aiChatBox) {
+    let text = aiChatBox.querySelector(".teacher-chat-area"); // Element to display AI response
+
+    // Regex to check if the user wants to fetch notes
+    const fetchNotesRegex = /fetch (\w+) (?:sir|mam) notes (?: with keyword (.+))?/i;
+    const match = user.message.match(fetchNotesRegex); // Match user message against regex
+
+    if (match) {
+        // Extract teacher name and keyword from the message
+        const teacherName = match[1].trim();
+        const keyword = match[2] ? match[2].trim() : '';
+
+        console.log("Fetching notes for:", teacherName, "with keyword:", keyword);
+
+        // Fetch notes from the server
+        try {
+            let fetchUrl = `http://localhost:3000/fetch-notes?teacher_name=${encodeURIComponent(teacherName)}`;
+            if (keyword) {
+                fetchUrl += `&keyword=${encodeURIComponent(keyword)}`; // Add keyword to URL if provided
+            }
+
+            const response = await fetch(fetchUrl); // Fetch notes from server
+            const data = await response.json(); // Parse response as JSON
+            console.log("Response data:", data);
+
+            if (data.length > 0) {
+                // Display notes as clickable links
+                const pdfLinks = data.map(note => `<a href="${note.file_url}" target="_blank">${note.file_url}</a>`).join('<br>');
+                text.innerHTML = `Found the following notes:<br>${pdfLinks}`;
+            } else {
+                text.innerHTML = 'No notes found for the specified teacher.'; // No notes found
+            }
+        } catch (error) {
+            console.error("Error fetching notes:", error); // Log error
+            text.innerHTML = 'Error fetching notes.'; // Display error message
+        }
+    } else {
+        // If not fetching notes, proceed with the generative API call
+        let RequestOption = {
+            method: 'POST', // HTTP method
+            headers: { 'Content-Type': 'application/json' }, // Request headers
+            body: JSON.stringify({
+                "contents": [{
+                    "parts": [{ "text": user.message }, (user.file.data ? [{ "inline_data": user.file }] : [])] // Include message and file data if available
+                }]
+            })
+        };
+
+        try {
+            let response = await fetch(Api_Url, RequestOption); // Send request to API
+            let data = await response.json(); // Parse response as JSON
+            let apiResponse = data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, "$1").trim(); // Process API response
+            text.innerHTML = apiResponse; // Display API response
+        } catch (error) {
+            console.log("error"); // Log error
+        } finally {
+            // Cleanup after API call
+            chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: "smooth" }); // Auto-scroll to the bottom of the chat container
+            image.src = `img/img.svg`; // Reset image source
+            image.classList.remove("choose"); // Remove "choose" class from image
+            user.file = {}; // Clear user file data
+        }
+    }
+}
+
+// Function to create a chat box
+function createChatBox(html, classes) {
+    let div = document.createElement("div"); // Create a new div element
+    div.innerHTML = html; // Set inner HTML of the div
+    div.classList.add(classes); // Add CSS classes to the div
+ ```javascript
+    return div; // Return the created chat box
+}
+
+// Function to handle user chat response
+function handlechatResponse(userMessage) {
+    user.message = userMessage; // Store user's message
+    let html = `<img src="img/user.png" alt="" id="userImage" width="6%">
+    <div class="user-chat-area">
+    ${user.message} // Display user's message
+    ${user.file.data ? `<img src="data:${user.file.mime_type};base64,${user.file.data}" class="chooseimg"/>` : ""} // Show uploaded image if available
+    </div>`; 
+
+    prompt.value = ' '; // Clear the input prompt
+    let userChatBox = createChatBox(html, "user-chat-box"); // Create user chat box
+    chatContainer.appendChild(userChatBox); // Append user chat box to chat container
+
+    chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: "smooth" }); // Auto-scroll to the bottom
+
+    // Simulate AI response delay
+    setTimeout(() => {
+        let html = `<img src="img/teacher1.png" alt="" id="AiImage" width="3.5%">
+            <div class="teacher-chat-area">
+            <img src="img/loading.gif" alt="loading" width="50px"> // Loading animation
+            </div>`;
+        let aiChatBox = createChatBox(html, "teacher-chat-box"); // Create AI chat box
+        chatContainer.appendChild(aiChatBox); // Append AI chat box to chat container
+        generateResponse(aiChatBox); // Generate AI response
+    }, 600); // Delay of 600ms
+}
+
+// Event listener for user input in the prompt
+prompt.addEventListener("keydown", (e) => {
+    if (e.key == "Enter") {
+        handlechatResponse(prompt.value); // Handle response on Enter key press
+    }
+});
+
+// Event listener for submit button click
+submitbtn.addEventListener("click", () => {
+    handlechatResponse(prompt.value); // Handle response on button click
+});
+
+// Menu icon and content for side navigation
+const menuIcon = document.getElementById("menu-icon"); // Menu icon element
+const menuContent = document.getElementById("menu-content"); // Menu content element
+
+// Event listener for menu icon click
+menuIcon.addEventListener("click", () => {
+    if (menuContent.style.display === "block") {
+        menuContent.style.display = "none"; // Hide the menu
+    } else {
+        menuContent.style.display = "block"; // Show the menu
+        menuContent.style.left = "0px"; // Slide in from the right
+    }
+});
+
+// Log out functionality
+document.getElementById("logout").addEventListener("click", function () {
+    alert("You have been logged out!"); // Alert user on logout
+    window.location.href = "login.html"; // Redirect to login page
+});
+
+// Event listener for image input change
+imageinput.addEventListener("change", () => {
+    const file = imageinput.files[0]; // Get the uploaded file
+    if (!file) return; // Exit if no file is selected
+    let reader = new FileReader(); // Create a FileReader to read the file
+    reader.onload = (e) => {
+        let base64string = e.target.result.split(",")[1]; // Get base64 string from result
+        user.file = {
+            mime_type: file.type, // Store MIME type
+            data: base64string // Store base64 data
+        };
+        image.src = `data:${user.file.mime_type};base64,${user.file.data}`; // Set image source to uploaded file
+        image.classList.add("choose"); // Add "choose" class to image
+    };
+    reader.readAsDataURL(file); // Read the file as a data URL
+});
+
+// Event listener for image button click
+imagebtn.addEventListener("click", () => {
+    imagebtn.querySelector("input").click(); // Open file dialog for image upload
+});
+
+// Function to hide the side navigation
+function hideSideNav() {
+    const sideNav = document.getElementById('side-nav'); // Get side navigation element
+    sideNav.style.opacity = '0'; // Fade out the side navigation
+    setTimeout(() => {
+        sideNav.style.display = 'none'; // Completely hide after fade
+    }, 300); 
+}
+
+// Event listener for submit button to hide side navigation
+document.getElementById('submit').addEventListener('click', hideSideNav);
+
+// Event listener for prompt keydown to hide side navigation
+document.getElementById('prompt').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        hideSideNav(); // Hide side navigation on Enter key ```javascript
+    }
+});
