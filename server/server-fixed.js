@@ -114,6 +114,22 @@ connection.connect((err) => {
       console.log("Teacher_notes table ready")
     }
   })
+
+  // Create notices table if it doesn't exist
+  const createNoticesTable = `
+    CREATE TABLE IF NOT EXISTS notices (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      teacher_name VARCHAR(100) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `
+
+  connection.query(createNoticesTable, (err) => {
+    if (err) console.error("Error creating notices table:", err)
+    else console.log("Notices table ready")
+  })
 })
 
 // File upload configuration
@@ -150,6 +166,118 @@ const authenticateTeacher = (req, res, next) => {
     return res.status(401).json({ message: "Invalid or expired token" })
   }
 }
+
+// ===================== NOTICE ROUTES =====================
+
+// Get all notices
+app.get("/api/notices", (req, res) => {
+  connection.query("SELECT * FROM notices ORDER BY created_at DESC", (err, results) => {
+    if (err) {
+      console.error("Database error fetching notices:", err)
+      return res.status(500).json({ message: "Error fetching notices" })
+    }
+    res.json(results)
+  })
+})
+
+// Post a new notice (authenticated teachers)
+app.post("/api/notices", authenticateTeacher, (req, res) => {
+  const teacherName = req.teacher?.name || "Teacher"
+  const { title, content } = req.body || {}
+
+  if (!title || !content) {
+    return res.status(400).json({ message: "Title and content are required" })
+  }
+
+  connection.query(
+    "INSERT INTO notices (teacher_name, title, content) VALUES (?, ?, ?)",
+    [teacherName, title, content],
+    (err, result) => {
+      if (err) {
+        console.error("Database error creating notice:", err)
+        return res.status(500).json({ message: "Error creating notice" })
+      }
+
+      connection.query("SELECT * FROM notices WHERE id = ?", [result.insertId], (err2, rows) => {
+        if (err2) {
+          console.error("Database error fetching created notice:", err2)
+          return res.status(201).json({ message: "Notice created", id: result.insertId })
+        }
+        res.status(201).json(rows[0])
+      })
+    },
+  )
+})
+
+// Delete a notice (authenticated teachers)
+app.delete("/api/notices/:id", authenticateTeacher, (req, res) => {
+  const noticeId = parseInt(req.params.id, 10)
+  if (!Number.isFinite(noticeId)) {
+    return res.status(400).json({ message: "Invalid notice id" })
+  }
+
+  connection.query("DELETE FROM notices WHERE id = ?", [noticeId], (err, result) => {
+    if (err) {
+      console.error("Database error deleting notice:", err)
+      return res.status(500).json({ message: "Error deleting notice" })
+    }
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: "Notice not found" })
+    }
+    res.status(204).send()
+  })
+})
+
+// Proxy external WordPress notices (avoids browser CORS)
+app.get("/api/external-notices", async (req, res) => {
+  const limitRaw = req.query.limit
+  const pageRaw = req.query.page
+
+  const limit = Math.min(50, Math.max(1, parseInt(limitRaw || "20", 10) || 20))
+  const page = Math.max(1, parseInt(pageRaw || "1", 10) || 1)
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 8000)
+
+  try {
+    const wpUrl = `http://btechcsegehu.in/wp-json/wp/v2/posts?per_page=${limit}&page=${page}&orderby=date&order=desc&_embed=1`
+
+    const response = await fetch(wpUrl, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "GEnius-Chatbot/1.0",
+      },
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "")
+      return res.status(502).json({ message: "Failed to fetch external notices", status: response.status, details: text })
+    }
+
+    const posts = await response.json()
+    const notices = (Array.isArray(posts) ? posts : []).map((p) => {
+      const authorName = p?._embedded?.author?.[0]?.name || "CSE Department"
+      return {
+        id: p.id,
+        title: p?.title?.rendered || "",
+        content: p?.excerpt?.rendered || p?.content?.rendered || "",
+        teacher_name: authorName,
+        created_at: p?.date || null,
+        url: p?.link || null,
+        source: "external",
+      }
+    })
+
+    res.json(notices)
+  } catch (err) {
+    const isAbort = err?.name === "AbortError"
+    res.status(502).json({ message: isAbort ? "External notices request timed out" : "External notices fetch failed", details: err?.message })
+  } finally {
+    clearTimeout(timeout)
+  }
+})
 
 // Debug middleware to log requests
 app.use((req, res, next) => {

@@ -122,7 +122,7 @@
   <div class="side-nav" id="side-nav">
     <img src="../img/GEHU.jpg" alt="GEU" class="chatbot-image">
     <h1 class="chatbot-title">GEnius – Teacher Portal</h1>
-    <p class="chatbot-info">Upload notes, post notices, chat with AI, and manage your content from one place.</p>
+    <p class="chatbot-info">Upload notes, chat with AI, and manage your content from one place.</p>
 
     <div class="role-banner">
       <div class="role-dot"></div>
@@ -138,10 +138,6 @@
       <div class="command teacher-cmd" id="cmd-my-notes">
         <span class="command-icon">📋</span>
         <span class="command-text">My Notes</span>
-      </div>
-      <div class="command teacher-cmd" id="cmd-post-notice">
-        <span class="command-icon">📝</span>
-        <span class="command-text">Post a Notice</span>
       </div>
       <div class="command" id="cmd-notices">
         <span class="command-icon">📢</span>
@@ -202,28 +198,6 @@
       <div class="notes-grid" id="my-notes-grid">
         <p class="empty-msg">Loading your notes...</p>
       </div>
-    </div>
-  </div>
-
-  <!-- Post Notice -->
-  <div class="feature-panel" id="panel-post-notice">
-    <div class="panel-header">
-      <button class="btn-back" onclick="closePanel('panel-post-notice')">← Back to Chat</button>
-      <h2>📝 Post a Notice</h2>
-    </div>
-    <div class="panel-body">
-      <div class="upload-form">
-        <div class="status-msg" id="notice-post-status"></div>
-        <form id="post-notice-form">
-          <label>Notice Title</label>
-          <input type="text" id="notice-title" placeholder="e.g. Exam Schedule Update" required>
-          <label>Notice Content</label>
-          <textarea id="notice-content" rows="5" placeholder="Write your notice here..." required></textarea>
-          <button type="submit" class="btn-action" id="notice-post-btn">📢 Post Notice</button>
-        </form>
-      </div>
-      <p style="font-size:14px; color:#b0b0b0; font-weight:500; margin-top:24px; margin-bottom:12px;">📢 My Posted Notices</p>
-      <div id="my-notices-list"><p class="empty-msg">Loading...</p></div>
     </div>
   </div>
 
@@ -310,7 +284,6 @@ function closePanel(id) {
 // ── Quick actions ──
 document.getElementById('cmd-upload').addEventListener('click',       () => openPanel('panel-upload'));
 document.getElementById('cmd-my-notes').addEventListener('click',     () => { openPanel('panel-my-notes'); loadMyNotes(); });
-document.getElementById('cmd-post-notice').addEventListener('click',  () => { openPanel('panel-post-notice'); fetchMyNotices(); });
 document.getElementById('cmd-notices').addEventListener('click',      () => { openPanel('panel-notices'); fetchAllNotices(); });
 document.getElementById('cmd-browse-notes').addEventListener('click', () => openPanel('panel-browse-notes'));
 
@@ -435,75 +408,25 @@ async function loadMyNotes() {
   } catch(err) { grid.innerHTML=`<p class="empty-msg">Error: ${err.message}</p>`; }
 }
 
-// ── Post Notice ──
-document.getElementById('post-notice-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const status  = document.getElementById('notice-post-status');
-  const btn     = document.getElementById('notice-post-btn');
-  const title   = document.getElementById('notice-title').value.trim();
-  const content = document.getElementById('notice-content').value.trim();
-  if (!title || !content) { showStatus(status,'Please fill in all fields.','error'); return; }
-  btn.textContent = 'Posting...'; btn.disabled = true;
-  try {
-    const res = await fetch(`${API_BASE}/api/notices`, {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${teacherToken}`},
-      body: JSON.stringify({ title, content })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
-    showStatus(status,'✅ Notice posted!','success');
-    document.getElementById('post-notice-form').reset();
-    fetchMyNotices();
-  } catch(err) { showStatus(status,`❌ ${err.message}`,'error'); }
-  finally { btn.textContent = '📢 Post Notice'; btn.disabled = false; }
-});
-
-async function fetchMyNotices() {
-  const list = document.getElementById('my-notices-list');
-  list.innerHTML = '<p class="empty-msg">Loading...</p>';
-  try {
-    const res = await fetch(`${API_BASE}/api/notices`); const data = await res.json();
-    const mine = data.filter(n => n.teacher_name === teacherName);
-    if (!mine.length) { list.innerHTML='<p class="empty-msg">No notices posted yet.</p>'; return; }
-    list.innerHTML = '';
-    mine.forEach(n => {
-      const card = document.createElement('div'); card.className = 'notice-card';
-      card.innerHTML = `<h3>${escapeHTML(n.title)}</h3><p>${escapeHTML(n.content)}</p><div class="meta">${new Date(n.created_at).toLocaleString()}</div><button class="btn-delete" onclick="deleteNotice(${n.id})">🗑 Delete</button>`;
-      list.appendChild(card);
-    });
-  } catch(err) { list.innerHTML='<p class="empty-msg">Error loading.</p>'; }
-}
-
-async function deleteNotice(id) {
-  if (!confirm('Delete this notice?')) return;
-  try {
-    const res = await fetch(`${API_BASE}/api/notices/${id}`,{ method:'DELETE', headers:{'Authorization':`Bearer ${teacherToken}`} });
-    if (res.ok) fetchMyNotices();
-  } catch(err) { alert('Delete failed: '+err.message); }
-}
-
 // ── All Notices ──
 async function fetchAllNotices() {
   const list = document.getElementById('notices-list');
   list.innerHTML = '<p class="empty-msg">Loading...</p>';
   try {
-    const res = await fetch(`${API_BASE}/api/notices`); const data = await res.json();
-    if (!data.length) { list.innerHTML='<p class="empty-msg">No notices yet.</p>'; return; }
+    const res = await fetch(`${API_BASE}/api/external-notices?limit=20&page=1`);
+    const data = await res.json();
+    if (!Array.isArray(data) || !data.length) { list.innerHTML='<p class="empty-msg">No notices yet.</p>'; return; }
     list.innerHTML = '';
     data.forEach(n => {
       const card = document.createElement('div'); card.className = 'notice-card';
-      card.innerHTML = `<h3>${escapeHTML(n.title)}</h3><p>${escapeHTML(n.content)}</p><div class="meta">📌 ${escapeHTML(n.teacher_name)} &nbsp;|&nbsp; ${new Date(n.created_at).toLocaleString()}</div><button class="btn-delete" onclick="deleteNoticeAll(${n.id})">🗑 Delete</button>`;
+      const title = escapeHTML(stripHtml(n.title || 'Notice'));
+      const body  = escapeHTML(stripHtml(n.content || ''));
+      const when  = n.created_at ? new Date(n.created_at).toLocaleString() : '';
+      const link  = n.url ? `<a href="${n.url}" target="_blank" rel="noopener noreferrer" style="color:#4fc3f7; text-decoration:none;">Open on college site ↗</a>` : '';
+      card.innerHTML = `<h3>${title}</h3><p>${body}</p><div class="meta">${when}${link ? ` &nbsp;|&nbsp; ${link}` : ''}</div>`;
       list.appendChild(card);
     });
   } catch(err) { list.innerHTML='<p class="empty-msg">Failed to load.</p>'; }
-}
-
-async function deleteNoticeAll(id) {
-  if (!confirm('Delete this notice?')) return;
-  try {
-    const res = await fetch(`${API_BASE}/api/notices/${id}`,{ method:'DELETE', headers:{'Authorization':`Bearer ${teacherToken}`} });
-    if (res.ok) fetchAllNotices();
-  } catch(err) { alert('Delete failed: '+err.message); }
 }
 
 // ── Browse Notes ──
@@ -539,8 +462,18 @@ function escapeHTML(str) {
   return str.replace(/[&<>'"]/g, t=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
 }
 
+function stripHtml(html) {
+  if (!html) return '';
+  return String(html)
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // ── Welcome bubble ──
-addAiBubble(`👋 Hello, <strong>${escapeHTML(teacherName||'Teacher')}</strong>! I'm GEnius.<br>Use the quick actions on the left to upload notes, post notices, and more.<br><br><em style="opacity:0.7;">Tip: "Fetch my notes with keyword AI"</em>`);
+addAiBubble(`👋 Hello, <strong>${escapeHTML(teacherName||'Teacher')}</strong>! I'm GEnius.<br>Use the quick actions on the left to upload notes and more.<br><br><em style="opacity:0.7;">Tip: "Fetch my notes with keyword AI"</em>`);
 </script>
 </body>
 </html>
