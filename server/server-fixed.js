@@ -8,6 +8,8 @@ const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const fs = require("fs")
 
+
+
 // Load environment variables from .env if present (optional)
 try {
   require('dotenv').config()
@@ -481,54 +483,66 @@ app.get("/", (req, res) => {
 })
 
 const gehuSystemPrompt = require('./gehuSystemPrompt');
-// AI proxy endpoint - forwards requests to OpenRouter Gemini API
+// AI proxy endpoint - forwards requests to OpenAI API
 app.post('/api/ai', async (req, res) => {
   try {
-    // Use OpenRouter key from env or body
-    const openrouterKey = process.env.OPENAI_API_KEY || req.body.apiKey
-    let { prompt, model } = req.body
-    if (!openrouterKey) {
-      return res.status(400).json({ error: 'No OpenRouter API key provided. Set OPENAI_API_KEY in .env or include apiKey in the POST body.' })
+    const { prompt } = req.body
+    
+    if (!prompt) {
+      return res.status(400).json({ error: 'Prompt is required' })
     }
 
-    // OpenRouter Gemini model (default)
-    // Use the correct OpenRouter model ID for Google: Gemma 2B (free)
-    const usedModel = model || 'arcee-ai/trinity-large-preview:free'
-
-    // No forced language system message
-    // System prompt for teacher-like, polite, and location-aware chatbot
+    // Direct call to OpenAI API
+    const openAiApiKey = process.env.OPENAI_API_KEY
+    if (!openAiApiKey) {
+      console.warn("OPENAI_API_KEY is not set in environment variables.")
+      return res.status(500).json({ error: 'OpenAI API key missing on server' })
+    }
+    
+    // Build the request payload for OpenAI API
     const payload = {
-      model: usedModel,
+      model: "gpt-4o-mini",
       messages: [
         { role: 'system', content: gehuSystemPrompt },
-        { role: 'user', content: prompt || '' }
-      ]
+        { role: 'user', content: prompt }
+      ],
+      temperature: 1,
+      top_p: 1
     }
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openrouterKey}`,
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'GEnius-Chatbot'
-      },
-      body: JSON.stringify(payload),
-    })
-    const text = await response.text()
-    let data
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60000) // 60 second timeout
+    
     try {
-      data = JSON.parse(text)
-    } catch (e) {
-      data = { raw: text }
+      const apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openAiApiKey}`
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      })
+      
+      const responseText = await apiResponse.text()
+      let responseData
+      
+      try {
+        responseData = JSON.parse(responseText)
+      } catch (e) {
+        responseData = { raw: responseText, error: 'Failed to parse OpenAI response' }
+      }
+      
+      return res.status(apiResponse.status || 200).json(responseData)
+    } finally {
+      clearTimeout(timeout)
     }
-    if (!response.ok) {
-      console.error('OpenRouter error:', data)
-    }
-    return res.status(response.status || 200).json(data)
   } catch (err) {
-    console.error('AI proxy error:', err)
-    res.status(502).json({ error: 'AI proxy error', details: err.message })
+    if (err.name === 'AbortError') {
+      return res.status(504).json({ error: 'OpenAI API request timeout' })
+    }
+    console.error('AI proxy error:', err.message)
+    return res.status(502).json({ error: 'AI proxy error', details: err.message })
   }
 })
 

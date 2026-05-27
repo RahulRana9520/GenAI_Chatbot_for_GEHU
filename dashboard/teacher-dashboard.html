@@ -247,8 +247,7 @@
 
 <script>
 const API_BASE   = "http://localhost:3000";
-// IMPORTANT: Gemini API key removed for security. Set GEMINI_API_KEY in your environment and inject at build time.
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=YOUR_GEMINI_API_KEY_HERE";
+
 
 // ── Auth guard ──
 const teacherToken = localStorage.getItem('teacherToken');
@@ -356,16 +355,30 @@ async function generateResponse() {
     return;
   }
 
-  // Gemini AI
+  // Backend Proxy AI
   const bubble = addAiBubble('⏳ Thinking...');
   try {
-    const parts = [{ text: userMsg }];
-    if (b64) parts.push({ inline_data: { mime_type: 'image/jpeg', data: b64 } });
-    const res  = await fetch(GEMINI_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents:[{ parts }] }) });
+    const body = { prompt: userMsg };
+    if (b64) body.file = { mime_type: 'image/jpeg', data: b64 };
+    const res = await fetch(`${API_BASE}/api/ai`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
     const data = await res.json();
-    const raw  = data.candidates[0].content.parts[0].text;
+    let raw = "";
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+    if (data.choices && data.choices[0]) {
+      raw = data.choices[0].message?.content || data.choices[0].text || "";
+    } else if (data.candidates && data.candidates[0]) {
+      raw = data.candidates[0].content?.parts?.[0]?.text || "";
+    } else if (typeof data === "string") {
+      raw = data;
+    } else {
+      raw = JSON.stringify(data);
+    }
     bubble.innerHTML = raw.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-  } catch(err) { bubble.innerHTML = `⚠️ AI is unavailable right now.`; }
+  } catch(err) { bubble.innerHTML = `⚠️ AI is unavailable right now. (${err.message})`; }
 }
 
 document.getElementById('submit').addEventListener('click', generateResponse);

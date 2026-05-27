@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         // General AI response via backend proxy
         try {
-          const body = { prompt: user.message, model: 'arcee-ai/trinity-large-preview:free' }
+          const body = { prompt: user.message }
           // If an image file was attached, include minimal metadata (the backend can be extended to accept base64 inline data)
           if (user.file && user.file.data) {
             body.file = { mime_type: user.file.mime_type, data: user.file.data }
